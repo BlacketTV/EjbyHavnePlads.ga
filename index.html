@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('images/baggrund.png') no-repeat center center fixed;
+      background-size: cover;
+      padding: 2rem;
+      margin: 0;
+      animation: fadeInBody 1.5s ease;
+    }
+  
+    @keyframes fadeInBody {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  
+    h1 {
+      text-align: center;
+      color: #fff;
+      text-shadow: 2px 2px 6px #000;
+      font-size: 3rem;
+      animation: slideDown 1s ease-out;
+    }
+  
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  
+    form {
+      background: rgba(255, 255, 255, 0.97);
+      padding: 2rem;
+      max-width: 550px;
+      margin: 2rem auto;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      animation: fadeInForm 1.2s ease;
+    }
+  
+    @keyframes fadeInForm {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  
+    input, select, button {
+      width: 100%;
+      padding: 0.9rem;
+      margin: 0.6rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+  
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0288d1;
+      box-shadow: 0 0 6px rgba(2,136,209,0.3);
+    }
+  
+    button {
+      background: linear-gradient(135deg, #0288d1, #26c6da);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s ease;
+    }
+  
+    button:hover {
+      background: linear-gradient(135deg, #0277bd, #00acc1);
+      transform: translateY(-2px);
+    }
+  
+    #certificate {
+      display: none;
+      background: white;
+      padding: 2rem;
+      margin: 2rem auto;
+      border: 2px dashed #01579b;
+      border-radius: 12px;
+      max-width: 550px;
+      text-align: center;
+      animation: fadeInCert 1s ease;
+    }
+  
+    @keyframes fadeInCert {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  
+    #pladser {
+      text-align: center;
+      font-size: 1.3rem;
+      margin-top: 1rem;
+      color: #fff;
+      text-shadow: 1px 1px 3px #000;
+    }
+  
+    #downloadBtn {
+      display: none;
+      margin-top: 1rem;
+      background-color: #43a047;
+      font-weight: bold;
+    }
+  
+    .checkbox-group {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+  
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f9f9f9;
+      padding: 0.6rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+  
+    #loading {
+      display: none;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #fff;
+      background: rgba(0,0,0,0.7);
+      padding: 1rem;
+      border-radius: 12px;
+      max-width: 320px;
+      margin: 1rem auto;
+      animation: pulse 1s infinite alternate;
+    }
+  
+    @keyframes pulse {
+      from { transform: scale(1); opacity: 0.9; }
+      to { transform: scale(1.05); opacity: 1; }
+    }
+  
+    @media print {
+      body *:not(#certificate):not(#certificate *) {
+        display: none;
+      }
+    }
+  </style>  
+</head>
+<body>
+  <h1>Ejby Havn - Køb Havneplads</h1>
+  <div id="pladser">Ledige pladser: <span id="pladsAntal">5</span></div>
+  <form id="harborForm">
+    <input type="text" id="fornavn" placeholder="Fornavn" required>
+    <input type="text" id="efternavn" placeholder="Efternavn" required>
+    <select id="baadType" required>
+      <option value="">Vælg bådtype</option>
+      <option value="Sejlbåd">Sejlbåd</option>
+      <option value="Motorbåd">Motorbåd</option>
+      <option value="Yacht">Yacht</option>
+      <option value="Speedbåd">Speedbåd</option>
+    </select>
+    <input type="text" id="stoerrelse" placeholder="Bådens længde i meter" required>
+
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="certifikat" value="Duelighedsbevis"> Duelighedsbevis</label>
+      <label><input type="checkbox" name="certifikat" value="Speedbådscertifikat"> Speedbådscertifikat</label>
+      <label><input type="checkbox" name="certifikat" value="Intet" id="intetCert"> Intet certifikat</label>
+    </div>
+
+    <button type="submit">Tilmeld</button>
+  </form>
+
+  <div id="loading">Genererer certifikat, vent venligst...</div>
+  <div id="certificate">
+    <h2>Certifikat for Havneplads</h2>
+    <p id="certNavn"></p>
+    <p id="certBaad"></p>
+    <p id="certStoerrelse"></p>
+    <p id="certCertifikat"></p>
+    <button id="downloadBtn">Hent bevis</button>
+  </div>
+
+  <script>
+    let ledigePladser = 5;
+    const pladsDisplay = document.getElementById('pladsAntal');
+    const form = document.getElementById('harborForm');
+    const certDiv = document.getElementById('certificate');
+    const loadingDiv = document.getElementById('loading');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (ledigePladser <= 0) {
+        alert('Ingen ledige pladser tilbage');
+        return;
+      }
+
+      const certifikater = Array.from(document.querySelectorAll('input[name="certifikat"]:checked'))
+                                .map(cb => cb.value)
+                                .filter(val => val !== "Intet");
+
+      const intetCert = document.getElementById('intetCert').checked;
+      let certText = intetCert ? 'Ingen certifikat valgt' : certifikater.join(', ');
+
+      loadingDiv.style.display = 'block';
+      certDiv.style.display = 'none';
+      downloadBtn.style.display = 'none';
+
+      setTimeout(() => {
+        loadingDiv.style.display = 'none';
+
+        document.getElementById('certNavn').textContent = `Navn: ${document.getElementById('fornavn').value} ${document.getElementById('efternavn').value}`;
+        document.getElementById('certBaad').textContent = `Bådtype: ${document.getElementById('baadType').value}`;
+        document.getElementById('certStoerrelse').textContent = `Størrelse: ${document.getElementById('stoerrelse').value} meter`;
+        document.getElementById('certCertifikat').textContent = `Certifikat: ${certText}`;
+
+        certDiv.style.display = 'block';
+        downloadBtn.style.display = 'inline-block';
+
+        ledigePladser--;
+        pladsDisplay.textContent = ledigePladser;
+      }, 1500);
+    });
+
+    downloadBtn.addEventListener('click', function() {
+      window.print();
+    });
+  </script>
+</body>
+</html>
